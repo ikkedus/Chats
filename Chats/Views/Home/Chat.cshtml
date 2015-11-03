@@ -1,0 +1,86 @@
+﻿@{
+    ViewBag.Title = "Chat";
+}
+<style>
+    #Navigation > section {
+        height:100px;
+        background:linear-gradient(#4c4c4c,#2c2c2c);
+    }
+    .user {
+        float:right;
+    }
+    .notUser {
+        float:left;
+    }
+    #messages > section {
+    clear: both;
+    border:1px solid white;
+    }
+</style>
+<h2>Chat</h2>
+<div style="  min-height: 100%; height: 100%;" class="container">
+    <section id="Navigation" class="col-md-4">
+        <section>
+
+        </section>
+        <section></section>
+        <section></section>
+        <section></section>
+        <section></section>
+    </section>
+    <section style="height:600px; overflow-y:auto;" id="Chatbox" class="col-md-8">
+        <section id="messages"  class="row">
+
+        </section>
+    
+
+
+
+    </section>
+    <section class="col-md-8 col-md-offset-4" id="messageBox">
+        <input type="text" id="message" />
+        <input type="button" id="sendmessage" value="Send" />
+        <input type="hidden" id="displayname" />
+    </section>
+</div>
+@section scripts {
+    <script src="~/Scripts/jquery.signalR-2.2.0.min.js"></script>
+    <script src="~/signalr/hubs"></script>
+    <script>
+        $(function () {
+            // Reference the auto-generated proxy for the hub.  
+            var chat = $.connection.chatHub;
+            chat.client.addNewMessageToPage = function (name, message) {
+                //vertonen van bericht
+                $('#messages').append('<section class=" alert  col-md-12 ' + isUser(name) + '"><p>' + htmlEncode(message)
+                    + '</p><strong>' + htmlEncode(name)
+                    + '</strong></section>');
+                $('#Chatbox').scrollTop($('#messages').innerHeight());
+            };
+            // Get the user name and store it to prepend to messages.
+            $('#displayname').val(prompt('Enter your name:', ''));
+            // Set initial focus to message input box.  
+            $('#message').focus();
+            //start signalr
+            $.connection.hub.start().done(function () {
+                $('#sendmessage').click(function () {
+                    //verstuur bericht
+                    chat.server.sendmessage($('#displayname').val(), $('#message').val());
+                    //maak berichten veld leeg 
+                    $('#message').val('').focus();
+                });
+            });
+        });
+        // This optional function html-encodes messages for display in the page.
+        function htmlEncode(value) {
+            var encodedValue = $('<div />').text(value).html();
+            return encodedValue;
+        }
+        function isUser(value) {
+            if (value == $("#displayname").val()) {
+                return 'user alert-success';
+            }
+            return "notUser alert-warning";
+        }
+    </script>
+}
